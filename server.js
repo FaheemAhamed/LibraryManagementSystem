@@ -23,6 +23,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/books', bookRoutes);
 
+// Centralized error handler (must be last)
+const errorHandler = require('./middleware/errorMiddleware');
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

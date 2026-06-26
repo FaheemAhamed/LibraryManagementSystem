@@ -5,14 +5,16 @@ const jwt = require('jsonwebtoken');
 // @desc Register new user
 // @route POST /api/users/register
 // @access Public
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
 
     // 🔹 Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      const err = new Error('User already exists');
+      err.statusCode = 400;
+      return next(err);
     }
 
     // 🔹 Hash password
@@ -35,11 +37,11 @@ const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 }; 
 
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -47,14 +49,18 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      const err = new Error('Invalid email or password');
+      err.statusCode = 400;
+      return next(err);
     }
 
     // 🔹 Compare password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      const err = new Error('Invalid email or password');
+      err.statusCode = 400;
+      return next(err);
     }
 
     // 🔹 Generate JWT Token
@@ -74,36 +80,40 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllMembers = async (req, res) => {
+const getAllMembers = async (req, res, next) => {
   try {
     const members = await User.find({ role: 'member' }).select('-password');
     res.json(members);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteMember = async (req, res) => {
+const deleteMember = async (req, res, next) => {
   try {
     const member = await User.findOne({ _id: req.params.id, role: 'member' });
     if (!member) {
-      return res.status(404).json({ message: 'Member not found or not a member' });
+      const err = new Error('Member not found or not a member');
+      err.statusCode = 404;
+      return next(err);
     }
 
     // Check if member has unreturned books
     const activeBorrows = await require('../models/BorrowRecord').findOne({ memberId: member._id, status: 'borrowed' });
     if (activeBorrows) {
-      return res.status(400).json({ message: 'Cannot delete member with active borrowed books' });
+      const err = new Error('Cannot delete member with active borrowed books');
+      err.statusCode = 400;
+      return next(err);
     }
 
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'Member deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

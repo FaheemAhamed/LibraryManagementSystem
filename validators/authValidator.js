@@ -3,7 +3,10 @@ const { body, validationResult } = require('express-validator');
 const validateResult = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errorMsg = errors.array().map(err => err.msg).join(', ');
+    const error = new Error(errorMsg);
+    error.statusCode = 400;
+    return next(error);
   }
   next();
 };

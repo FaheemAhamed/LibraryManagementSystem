@@ -16,18 +16,24 @@ const protect = async (req, res, next) => {
       // 🔹 Get user from DB
       req.user = await User.findById(decoded.id).select('-password');
       if (!req.user) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
+        const err = new Error('Not authorized, user not found');
+        err.statusCode = 401;
+        return next(err);
       }
 
       return next();
 
     } catch (error) {
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+      const err = new Error('Not authorized, token failed');
+      err.statusCode = 401;
+      return next(err);
     }
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'No token, not authorized' });
+    const err = new Error('No token, not authorized');
+    err.statusCode = 401;
+    return next(err);
   }
 }; 
 
@@ -36,7 +42,9 @@ const librarianOnly = (req, res, next) => {
   if (req.user && req.user.role === 'librarian') {
     next();
   } else {
-    res.status(403).json({ message: 'Access denied. Librarian only.' });
+    const err = new Error('Access denied. Librarian only.');
+    err.statusCode = 403;
+    return next(err);
   }
 };
 

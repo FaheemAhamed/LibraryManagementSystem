@@ -1,14 +1,16 @@
 const Book = require("../models/bookModel");
 const BorrowRecord = require("../models/BorrowRecord");
 
-const addBook = async (req, res) => {
+const addBook = async (req, res, next) => {
     try {
         const { title, author, isbn, category, quantity } = req.body;
 
         // Check if isbn already exists
         const bookExists = await Book.findOne({ isbn });
         if (bookExists) {
-            return res.status(400).json({ message: "Book with this ISBN already exists" });
+            const err = new Error("Book with this ISBN already exists");
+            err.statusCode = 400;
+            return next(err);
         }
 
         const qty = Number(quantity) || 1;
@@ -23,23 +25,33 @@ const addBook = async (req, res) => {
 
         res.status(201).json(book);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const updateBook = async (req, res) => {
+const updateBook = async (req, res, next) => {
     try {
+        if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
+            const err = new Error("Invalid Book ID format");
+            err.statusCode = 400;
+            return next(err);
+        }
+
         const { title, author, isbn, category, quantity } = req.body;
         const book = await Book.findById(req.params.id);
 
         if (!book) {
-            return res.status(404).json({ message: "Book not found" });
+            const err = new Error("Book not found");
+            err.statusCode = 404;
+            return next(err);
         }
 
         if (isbn && isbn !== book.isbn) {
             const isbnExists = await Book.findOne({ isbn });
             if (isbnExists) {
-                return res.status(400).json({ message: "Book with this ISBN already exists" });
+                const err = new Error("Book with this ISBN already exists");
+                err.statusCode = 400;
+                return next(err);
             }
             book.isbn = isbn;
         }
@@ -54,7 +66,9 @@ const updateBook = async (req, res) => {
             const newAvailable = book.availableQuantity + diff;
 
             if (newAvailable < 0) {
-                return res.status(400).json({ message: "Cannot reduce quantity because some copies are currently borrowed" });
+                const err = new Error("Cannot reduce quantity because some copies are currently borrowed");
+                err.statusCode = 400;
+                return next(err);
             }
 
             book.quantity = newQty;
@@ -64,90 +78,87 @@ const updateBook = async (req, res) => {
         await book.save();
         res.json({ message: "Book updated successfully", book });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const deleteBook = async (req, res) => {
+const deleteBook = async (req, res, next) => {
     try {
+        if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
+            const err = new Error("Invalid Book ID format");
+            err.statusCode = 400;
+            return next(err);
+        }
+
         const book = await Book.findById(req.params.id);
         if (!book) {
-            return res.status(404).json({ message: "Book not found" });
+            const err = new Error("Book not found");
+            err.statusCode = 404;
+            return next(err);
         }
 
         // Check if there are active borrows for this book
         const activeBorrows = await BorrowRecord.findOne({ bookId: book._id, status: "borrowed" });
         if (activeBorrows) {
-            return res.status(400).json({ message: "Cannot delete book while some copies are borrowed" });
+            const err = new Error("Cannot delete book while some copies are borrowed");
+            err.statusCode = 400;
+            return next(err);
         }
 
         await Book.findByIdAndDelete(req.params.id);
         res.json({ message: "Book deleted successfully" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const getBookById = async (req, res) => {
+const getBookById = async (req, res, next) => {
     try {
         if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid Book ID format" });
+            const err = new Error("Invalid Book ID format");
+            err.statusCode = 400;
+            return next(err);
         }
         const book = await Book.findById(req.params.id);
         if (!book) {
-            return res.status(404).json({ message: "Book not found" });
+            const err = new Error("Book not found");
+            err.statusCode = 404;
+            return next(err);
         }
         res.json(book);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const getAllBooks = async (req, res) => {
+const getAllBooks = async (req, res, next) => {
     try {
         const books = await Book.find({});
         res.json(books);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const searchBooks = async (req, res) => {
-    try {
-        const { q } = req.query;
-        if (!q) {
-            return res.status(400).json({ message: "Query parameter 'q' is required" });
-        }
-
-        const regex = new RegExp(q, 'i');
-        const books = await Book.find({
-            $or: [
-                { title: regex },
-                { author: regex },
-                { category: regex },
-                { isbn: regex }
-            ]
-        });
-
-        res.json(books);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-const borrowBook = async (req, res) => {
+const borrowBook = async (req, res, next) => {
     try {
         if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid Book ID format" });
+            const err = new Error("Invalid Book ID format");
+            err.statusCode = 400;
+            return next(err);
         }
         const book = await Book.findById(req.params.id);
 
         if (!book) {
-            return res.status(404).json({ message: "Book not found" });
+            const err = new Error("Book not found");
+            err.statusCode = 404;
+            return next(err);
         }
 
         if (book.availableQuantity <= 0) {
-            return res.status(400).json({ message: "No copies of this book are currently available" });
+            const err = new Error("Book is currently unavailable");
+            err.statusCode = 400;
+            return next(err);
         }
 
         // Check if this member has already borrowed this book and hasn't returned it yet
@@ -158,7 +169,9 @@ const borrowBook = async (req, res) => {
         });
 
         if (alreadyBorrowed) {
-            return res.status(400).json({ message: "You have already borrowed a copy of this book" });
+            const err = new Error("You have already borrowed a copy of this book");
+            err.statusCode = 400;
+            return next(err);
         }
 
         // Update book availability
@@ -175,19 +188,23 @@ const borrowBook = async (req, res) => {
         res.json({ message: "Book borrowed successfully", borrowRecord: record, book });
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const returnBook = async (req, res) => {
+const returnBook = async (req, res, next) => {
     try {
         if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid Book ID format" });
+            const err = new Error("Invalid Book ID format");
+            err.statusCode = 400;
+            return next(err);
         }
         const book = await Book.findById(req.params.id);
 
         if (!book) {
-            return res.status(404).json({ message: "Book not found" });
+            const err = new Error("Book not found");
+            err.statusCode = 404;
+            return next(err);
         }
 
         // Find active borrow record
@@ -198,7 +215,9 @@ const returnBook = async (req, res) => {
         });
 
         if (!record) {
-            return res.status(400).json({ message: "No active borrow record found for this book and user" });
+            const err = new Error("No active borrow record found for this book and user");
+            err.statusCode = 400;
+            return next(err);
         }
 
         // Update borrow record
@@ -213,11 +232,11 @@ const returnBook = async (req, res) => {
         res.json({ message: "Book returned successfully", borrowRecord: record, book });
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
-const getMyBorrowedBooks = async (req, res) => {
+const getMyBorrowedBooks = async (req, res, next) => {
     try {
         const records = await BorrowRecord.find({
             memberId: req.user.id,
@@ -226,7 +245,7 @@ const getMyBorrowedBooks = async (req, res) => {
 
         res.json(records);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 };
 
@@ -236,7 +255,6 @@ module.exports = {
     deleteBook,
     getBookById,
     getAllBooks,
-    searchBooks,
     borrowBook,
     returnBook,
     getMyBorrowedBooks
