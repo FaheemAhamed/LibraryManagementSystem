@@ -133,7 +133,14 @@ const getBookById = async (req, res, next) => {
 
 const getAllBooks = async (req, res, next) => {
     try {
-        const books = await Book.find({});
+        const { category } = req.query;
+        let filter = {};
+
+        if (category) {
+            filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
+        }
+
+        const books = await Book.find(filter);
         res.json(books);
     } catch (error) {
         next(error);
