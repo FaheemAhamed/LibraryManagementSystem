@@ -133,7 +133,7 @@ const getBookById = async (req, res, next) => {
 
 const getAllBooks = async (req, res, next) => {
     try {
-        const { category, search } = req.query;
+        const { category, search, page, limit } = req.query;
         let filter = {};
 
         if (category) {
@@ -149,7 +149,12 @@ const getAllBooks = async (req, res, next) => {
             ];
         }
 
-        const books = await Book.find(filter);
+        // Pagination
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+        const skip = (pageNum - 1) * limitNum;
+
+        const books = await Book.find(filter).skip(skip).limit(limitNum);
         res.json(books);
     } catch (error) {
         next(error);
