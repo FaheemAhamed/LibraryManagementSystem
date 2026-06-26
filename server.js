@@ -2,7 +2,8 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db'); 
-const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
+const memberRoutes = require('./routes/memberRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 
 dotenv.config();
@@ -18,9 +19,9 @@ app.get('/', (req, res) => {
     res.send('Library Management API is running...'); 
 }); 
 
-
-app.use('/api/users', userRoutes);
-app.use("/api/books", bookRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/members', memberRoutes);
+app.use('/api/books', bookRoutes);
 
 const PORT = process.env.PORT || 5000;
 
