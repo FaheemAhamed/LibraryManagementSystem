@@ -133,11 +133,20 @@ const getBookById = async (req, res, next) => {
 
 const getAllBooks = async (req, res, next) => {
     try {
-        const { category } = req.query;
+        const { category, search } = req.query;
         let filter = {};
 
         if (category) {
             filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
+        }
+
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            filter.$or = [
+                { title: searchRegex },
+                { author: searchRegex },
+                { isbn: searchRegex }
+            ];
         }
 
         const books = await Book.find(filter);
