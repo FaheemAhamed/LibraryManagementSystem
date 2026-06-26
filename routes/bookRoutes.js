@@ -1,15 +1,16 @@
+
 //import express from "express"; 
-const express = require('express') 
-const { 
-    addBook, 
-    updateBook, 
-    deleteBook, 
-    getBookById, 
-    getAllBooks, 
-    searchBooks, 
-    borrowBook, 
-    returnBook, 
-    getMyBorrowedBooks 
+const express = require('express')
+const {
+    addBook,
+    updateBook,
+    deleteBook,
+    getBookById,
+    getAllBooks,
+    searchBooks,
+    borrowBook,
+    returnBook,
+    getMyBorrowedBooks
 } = require('../controllers/bookController.js')
 const { protect } = require('../middleware/authMiddleware.js')
 const { isLibrarian } = require('../middleware/roleMiddleware.js')
@@ -27,8 +28,6 @@ router.get("/:id", protect, getBookById);
 router.put("/:id", protect, isLibrarian, updateBook);
 router.delete("/:id", protect, isLibrarian, deleteBook);
 router.post("/borrow/:id", protect, borrowBook);
-router.post("/:id/borrow", protect, borrowBook);
-router.post("/return/:id", protect, returnBook);
 router.post("/:id/return", protect, returnBook);
 
 module.exports = router;
