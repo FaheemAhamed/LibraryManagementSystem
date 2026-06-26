@@ -90,6 +90,9 @@ const deleteBook = async (req, res) => {
 
 const getBookById = async (req, res) => {
     try {
+        if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid Book ID format" });
+        }
         const book = await Book.findById(req.params.id);
         if (!book) {
             return res.status(404).json({ message: "Book not found" });
