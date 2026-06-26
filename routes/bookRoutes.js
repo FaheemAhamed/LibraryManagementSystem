@@ -27,6 +27,8 @@ router.get("/:id", protect, getBookById);
 router.put("/:id", protect, isLibrarian, updateBook);
 router.delete("/:id", protect, isLibrarian, deleteBook);
 router.post("/borrow/:id", protect, borrowBook);
+router.post("/:id/borrow", protect, borrowBook);
 router.post("/return/:id", protect, returnBook);
+router.post("/:id/return", protect, returnBook);
 
 module.exports = router;

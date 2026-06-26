@@ -137,6 +137,9 @@ const searchBooks = async (req, res) => {
 
 const borrowBook = async (req, res) => {
     try {
+        if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid Book ID format" });
+        }
         const book = await Book.findById(req.params.id);
 
         if (!book) {
@@ -178,6 +181,9 @@ const borrowBook = async (req, res) => {
 
 const returnBook = async (req, res) => {
     try {
+        if (!require('mongoose').Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid Book ID format" });
+        }
         const book = await Book.findById(req.params.id);
 
         if (!book) {
