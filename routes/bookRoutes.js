@@ -11,15 +11,16 @@ const {
 } = require('../controllers/bookController.js')
 const { protect } = require('../middleware/authMiddleware.js')
 const { isLibrarian } = require('../middleware/roleMiddleware.js')
+const { validateBookAdd, validateBookUpdate } = require('../validators/bookValidator')
 
 const router = express.Router();
 
 // Book Management Routes
 router.get("/", protect, getAllBooks);
-router.post("/", protect, isLibrarian, addBook);
+router.post("/", protect, isLibrarian, validateBookAdd, addBook);
 
 router.get("/:id", protect, getBookById);
-router.put("/:id", protect, isLibrarian, updateBook);
+router.put("/:id", protect, isLibrarian, validateBookUpdate, updateBook);
 router.delete("/:id", protect, isLibrarian, deleteBook);
 
 router.post("/:id/borrow", protect, borrowBook);
