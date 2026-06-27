@@ -5,7 +5,7 @@ A secure, RESTful backend application built with **Node.js**, **Express**, and *
 ---
 
 ## 🚀 Deployment URL
-*To be added later.*
+Live API URL: [https://librarymanagementsystem-4yre.onrender.com](https://librarymanagementsystem-4yre.onrender.com)
 
 ---
 
