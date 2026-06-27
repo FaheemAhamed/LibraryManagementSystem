@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: library-management-system
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+        description: "MongoDB connection URI (e.g., mongodb+srv://...)"
+      - key: JWT_SECRET
+        sync: false
+        description: "Secret key for JWT verification and signing"
